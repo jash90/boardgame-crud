@@ -60,6 +60,7 @@ const authenticateToken = (req, res, next) => {
 
 
 const getUser = async (req, res) => {
+    try {
     // get token from Authorization header
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1];
@@ -68,14 +69,12 @@ const getUser = async (req, res) => {
         return res.status(401).json({ message: 'No token provided' });
     }
 
-    try {
+
         // verify token and get user id
         const { id } = jwt.verify(token, 'your_jwt_secret');
 
         // fetch user from database
         const users = await knex('users').where({ id });
-
-        console.log(users)
 
         if (users.length === 0) {
             return res.status(404).json({ message: 'User not found' });

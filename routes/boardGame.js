@@ -16,33 +16,41 @@ const getBoardGames = async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 10;
         const offset = parseInt(req.query.offset) || 0;
-        const sortBy = req.query.sortBy || "name";
-        const order = req.query.order || "asc";
-        const search = req.query.search || "";
-        const category = req.query.category || "";
+        const sortBy = req.query.sortBy || 'name';
+        const order = req.query.order || 'asc';
+        const search = req.query.search || '';
+        const category = req.query.category || '';
 
-        const boardgames = await knex("boardgames")
+        const avgRatingsSubquery = knex('rentals')
+            .select('boardgame_id')
+            .avg('rating as avg_rating')
+            .groupBy('boardgame_id')
+            .as('avg_ratings');
+
+        const boardgames = await knex('boardgames')
             .select(
-                "boardgames.id",
-                "boardgames.name",
-                "boardgames.category",
-                "boardgames.min_players",
-                "boardgames.max_players",
-                "boardgames.description",
-                "boardgames.is_available",
-                "rentals.first_name",
-                "rentals.last_name",
-                "rentals.rental_start_date"
+                'boardgames.id',
+                'boardgames.name',
+                'boardgames.category',
+                'boardgames.min_players',
+                'boardgames.max_players',
+                'boardgames.description',
+                'boardgames.is_available',
+                'rentals.first_name',
+                'rentals.last_name',
+                'rentals.rental_start_date',
+                'avg_ratings.avg_rating'
             )
-            .leftJoin("rentals", function () {
-                this.on("boardgames.id", "=", "rentals.boardgame_id").andOnNull(
-                    "rentals.rental_end_date"
+            .leftJoin('rentals', function () {
+                this.on('boardgames.id', '=', 'rentals.boardgame_id').andOnNull(
+                    'rentals.rental_end_date'
                 );
             })
-            .where("boardgames.name", "like", `%${search}%`)
+            .leftJoin(avgRatingsSubquery, 'boardgames.id', 'avg_ratings.boardgame_id')
+            .where('boardgames.name', 'like', `%${search}%`)
             .andWhere((builder) => {
                 if (category) {
-                    builder.where("boardgames.category", category);
+                    builder.where('boardgames.category', category);
                 }
             })
             .orderBy(sortBy, order)
@@ -52,9 +60,10 @@ const getBoardGames = async (req, res) => {
         res.status(200).json(boardgames);
     } catch (error) {
         console.log(error);
-        res.status(500).send("Error fetching boardgames");
+        res.status(500).send('Error fetching boardgames');
     }
 };
+
 
 
 const getBoardGame = async (req, res) => {
