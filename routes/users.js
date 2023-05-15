@@ -63,7 +63,9 @@ const authenticateAdmin = async (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
-    if (token == null) return res.sendStatus(401);
+    if (!token) {
+        return res.status(401).json({message: 'No token provided'});
+    }
 
     const {id} = jwt.verify(token, secretOrPublicKey)
 
