@@ -1,6 +1,6 @@
 const knex = require('knex')(require('./../knexfile').development);
 
-const getRentalByBoardGameId =  async (req, res) => {
+const getRentalByBoardGameId = async (req, res) => {
     const {boardGameId} = req.params;
 
     try {
@@ -21,15 +21,14 @@ const getRentalByBoardGameId =  async (req, res) => {
 };
 
 const addBoardGameReview = async (req, res) => {
-    const { id } = req.params;
-    const { rating, review } = req.body;
+    const {id} = req.params;
+    const {rating, review} = req.body;
 
 
     try {
         await knex('rentals')
-            .where({ id })
-            .update({ rating, review });
-
+            .where({id})
+            .update({rating, review});
 
 
         res.status(200).send('Review added successfully');
@@ -40,9 +39,9 @@ const addBoardGameReview = async (req, res) => {
 }
 
 
-const getRentalsByBoardGame =  async (req, res) => {
+const getRentalsByBoardGame = async (req, res) => {
     try {
-        const { gameId } = req.params;
+        const {gameId} = req.params;
         const rentals = await knex('rentals')
             .join('boardgames', 'rentals.boardgame_id', '=', 'boardgames.id')
             .select('rentals.*', 'boardgames.name as game_name')
@@ -66,7 +65,7 @@ const getRentalsByBoardGame =  async (req, res) => {
 };
 
 const clearRatingsByBoardGame = async (req, res) => {
-    const { gameId } = req.params;
+    const {gameId} = req.params;
     try {
         await knex('rentals')
             .where('boardgame_id', gameId)
@@ -79,5 +78,5 @@ const clearRatingsByBoardGame = async (req, res) => {
 };
 
 module.exports = {
-    getRentalByBoardGameId,getRentalsByBoardGame, addBoardGameReview, clearRatingsByBoardGame
+    getRentalByBoardGameId, getRentalsByBoardGame, addBoardGameReview, clearRatingsByBoardGame
 }

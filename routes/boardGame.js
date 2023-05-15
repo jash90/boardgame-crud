@@ -65,7 +65,6 @@ const getBoardGames = async (req, res) => {
 };
 
 
-
 const getBoardGame = async (req, res) => {
     try {
         const boardgame = await knex('boardgames').where('id', req.params.id).first();
@@ -164,6 +163,13 @@ const importBoardGames = async (req, res) => {
 }
 
 module.exports = {
-    createBoardGame,getBoardGames,getBoardGame, updateBoardGame, borrowBoardGame, returnBoardGame, deleteBoardGame, importBoardGames
+    createBoardGame,
+    getBoardGames,
+    getBoardGame,
+    updateBoardGame,
+    borrowBoardGame,
+    returnBoardGame,
+    deleteBoardGame,
+    importBoardGames
 }
 

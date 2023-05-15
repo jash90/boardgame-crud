@@ -13,7 +13,7 @@ const registrationSchema = Joi.object({
 
 // Create a middleware for validation
 const validateRegistration = (req, res, next) => {
-    const { error } = registrationSchema.validate(req.body);
+    const {error} = registrationSchema.validate(req.body);
     if (error) return res.status(400).send(error.details[0].message);
     next();
 };
