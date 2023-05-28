@@ -1,11 +1,12 @@
 // index.js
 const express = require('express');
 const bodyParser = require('body-parser');
-const knex = require('knex')(require('./knexfile').development);
 const upload = require('./src/middleware/upload');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpecs = require('./swagger');
 const cors = require('cors');
+const cache = require('./src/cache');
+
 require('dotenv').config();
 const {
   getRentalsByBoardGame,
@@ -41,8 +42,8 @@ const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 
-app.get('/boardgames', getBoardGames);
-app.get('/boardgames/:id', getBoardGame);
+app.get('/boardgames', cache('1h'), getBoardGames);
+app.get('/boardgames/:id', cache('1h'), getBoardGame);
 app.post(
   '/boardgames',
   authenticateAdmin,
@@ -68,7 +69,12 @@ app.get(
   getRentalByBoardGameId,
 );
 app.post('/rentals/:id/review', authenticateToken, addBoardGameReview);
-app.get('/rentals/:gameId', authenticateToken, getRentalsByBoardGame);
+app.get(
+  '/rentals/:gameId',
+  cache('1h'),
+  authenticateToken,
+  getRentalsByBoardGame,
+);
 app.delete(
   '/rentals/:gameId/clearRatings',
   authenticateAdmin,
@@ -79,7 +85,7 @@ app.post('/register', validateRegistration, register);
 app.post('/login', login);
 app.get('/user', authenticateToken, getUser);
 app.post('/set-admin', authenticateAdmin, setAdmin);
-app.get('/users', authenticateAdmin, getUsers);
+app.get('/users', cache('1h'), authenticateAdmin, getUsers);
 app.patch('/users/:id', authenticateAdmin, updateUserRole);
 app.post('/change-password', authenticateToken, changePassword);
 
