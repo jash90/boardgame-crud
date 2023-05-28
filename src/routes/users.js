@@ -168,6 +168,48 @@ const updateUserRole = async (req, res) => {
   }
 };
 
+const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+      return res.status(401).json({ message: 'No token provided' });
+    }
+
+    // verify token and get user id
+    const { id } = jwt.verify(token, secretOrPublicKey);
+
+    // fetch user from database
+    const user = await knex('users').where({ id }).first();
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Verify if the current password is correct
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Incorrect current password' });
+    }
+
+    // Hash the new password
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+
+    // Update the user's password
+    await knex('users').where({ id: user.id }).update({
+      password: passwordHash,
+    });
+
+    res.status(200).json({ message: 'Password changed successfully' });
+  } catch (e) {
+    console.log(e);
+    res.status(500).json({ message: 'Error in changing password' });
+  }
+};
+
 module.exports = {
   login,
   register,
@@ -177,4 +219,5 @@ module.exports = {
   getUsers,
   updateUserRole,
   authenticateAdmin,
+  changePassword,
 };

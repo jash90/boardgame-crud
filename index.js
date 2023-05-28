@@ -33,6 +33,7 @@ const {
   getUsers,
   updateUserRole,
   authenticateAdmin,
+  changePassword,
 } = require('./src/routes/users');
 const { validateRegistration } = require('./src/validation/registerUser');
 
@@ -80,6 +81,7 @@ app.get('/user', authenticateToken, getUser);
 app.post('/set-admin', authenticateAdmin, setAdmin);
 app.get('/users', authenticateAdmin, getUsers);
 app.patch('/users/:id', authenticateAdmin, updateUserRole);
+app.post('/change-password', authenticateToken, changePassword);
 
 app.use('/uploads', express.static('uploads'));
 
