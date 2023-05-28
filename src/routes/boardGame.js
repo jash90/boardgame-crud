@@ -61,7 +61,7 @@ const getBoardGames = async (req, res) => {
         'rentals.rental_start_date',
         'avg_ratings.avg_rating',
       )
-      .leftJoin('rentals', function () {
+      .leftJoin('rentals', function() {
         this.on('boardgames.id', '=', 'rentals.boardgame_id').andOnNull(
           'rentals.rental_end_date',
         );

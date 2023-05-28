@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 
-exports.up = function (knex) {
+exports.up = function(knex) {
   const hash = bcrypt.hashSync('password', saltRounds);
   return knex('users').insert({
     firstName: 'Admin',
@@ -12,6 +12,6 @@ exports.up = function (knex) {
   });
 };
 
-exports.down = function (knex) {
+exports.down = function(knex) {
   return knex('users').where('email', 'admin@example.com').del();
 };
