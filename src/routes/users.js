@@ -70,13 +70,13 @@ const authenticateAdmin = async (req, res, next) => {
 
   const { id } = jwt.verify(token, secretOrPublicKey);
 
-  const users = await knex('users').where({ id });
+  const user = await knex('users').where({ id }).first();
 
-  if (users.length === 0) {
+  if (!user) {
     return res.status(404).json({ message: 'User not found' });
   }
 
-  if (users[0]?.role !== 'admin') {
+  if (user?.role !== 'admin') {
     return res.status(401).json({ message: 'Unauthorized access' });
   }
   next();
@@ -96,13 +96,11 @@ const getUser = async (req, res) => {
     const { id } = jwt.verify(token, secretOrPublicKey);
 
     // fetch user from database
-    const users = await knex('users').where({ id });
+    const user = await knex('users').where({ id }).first();
 
-    if (users.length === 0) {
+    if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-
-    const user = users[0];
 
     // don't send password to client
     delete user.password;
