@@ -61,7 +61,7 @@ const getBoardGames = async (req, res) => {
         'rentals.rental_start_date',
         'avg_ratings.avg_rating',
       )
-      .leftJoin('rentals', function() {
+      .leftJoin('rentals', function () {
         this.on('boardgames.id', '=', 'rentals.boardgame_id').andOnNull(
           'rentals.rental_end_date',
         );
@@ -162,7 +162,6 @@ const borrowBoardGame = async (req, res) => {
 
   try {
     await knex.transaction(async (trx) => {
-      // Wstawienie rekordu do tabeli rentals
       await trx('rentals').insert({
         boardgame_id,
         first_name,
@@ -171,7 +170,6 @@ const borrowBoardGame = async (req, res) => {
         rental_start_date: new Date(),
       });
 
-      // Aktualizacja stanu is_available w tabeli boardgames
       await trx('boardgames').where('id', boardgame_id).update({
         is_available: false,
       });
@@ -185,12 +183,15 @@ const borrowBoardGame = async (req, res) => {
 };
 
 const returnBoardGame = async (req, res) => {
-  const { rental_id } = req.body;
+  const { boardGameId } = req.body;
 
   try {
     await knex.transaction(async (trx) => {
-      // Znajdowanie odpowiadającego wpisu wypożyczenia
-      const rental = await trx('rentals').where('id', rental_id).first();
+      const rental = await trx('rentals')
+        .where('boardgame_id', boardGameId)
+        .andWhere('rental_end_date', null)
+        .first();
+
       if (!rental) {
         return res.status(404).json({ message: 'Rental not found.' });
       }
@@ -202,7 +203,7 @@ const returnBoardGame = async (req, res) => {
 
       // Aktualizacja wpisu wypożyczenia z datą zakończenia
       const updatedRental = await trx('rentals')
-        .where('id', rental_id)
+        .where('id', rental.id)
         .update({
           rental_end_date: new Date(),
         })

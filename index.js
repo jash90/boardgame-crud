@@ -42,8 +42,8 @@ const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 
-app.get('/boardgames', cache('1h'), getBoardGames);
-app.get('/boardgames/:id', cache('1h'), getBoardGame);
+app.get('/boardgames', getBoardGames);
+app.get('/boardgames/:id', getBoardGame);
 app.post(
   '/boardgames',
   authenticateAdmin,
@@ -71,7 +71,6 @@ app.get(
 app.post('/rentals/:id/review', authenticateToken, addBoardGameReview);
 app.get(
   '/rentals/:gameId',
-  cache('1h'),
   authenticateToken,
   getRentalsByBoardGame,
 );
@@ -85,7 +84,7 @@ app.post('/register', validateRegistration, register);
 app.post('/login', login);
 app.get('/user', authenticateToken, getUser);
 app.post('/set-admin', authenticateAdmin, setAdmin);
-app.get('/users', cache('1h'), authenticateAdmin, getUsers);
+app.get('/users', authenticateAdmin, getUsers);
 app.patch('/users/:id', authenticateAdmin, updateUserRole);
 app.post('/change-password', authenticateToken, changePassword);
 

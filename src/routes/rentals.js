@@ -52,9 +52,9 @@ const getRentalsByBoardGame = async (req, res) => {
       res.status(404).send('Board game not found');
     }
 
-    if (rentals.length === 0) {
-      return res.status(404).send(`No rentals found for game id ${gameId}`);
-    }
+    // if (rentals.length === 0) {
+    //   return res.status(404).send(`No rentals found for game id ${gameId}`);
+    // }
 
     res.status(200).json({ boardGameName: boardGame.name, rentals });
   } catch (error) {
