@@ -161,16 +161,20 @@ const borrowBoardGame = async (req, res) => {
   const { boardgame_id, first_name, last_name, document_number } = req.body;
 
   try {
-    await knex('rentals').insert({
-      boardgame_id,
-      first_name,
-      last_name,
-      document_number,
-      rental_start_date: new Date(),
-    });
+    await knex.transaction(async (trx) => {
+      // Wstawienie rekordu do tabeli rentals
+      await trx('rentals').insert({
+        boardgame_id,
+        first_name,
+        last_name,
+        document_number,
+        rental_start_date: new Date(),
+      });
 
-    await knex('boardgames').where('id', boardgame_id).update({
-      is_available: false,
+      // Aktualizacja stanu is_available w tabeli boardgames
+      await trx('boardgames').where('id', boardgame_id).update({
+        is_available: false,
+      });
     });
 
     res.sendStatus(201);
@@ -184,26 +188,28 @@ const returnBoardGame = async (req, res) => {
   const { rental_id } = req.body;
 
   try {
-    // Find the corresponding rental entry
-    const rental = await knex('rentals').where('id', rental_id).first();
-    if (!rental) {
-      return res.status(404).json({ message: 'Rental not found.' });
-    }
+    await knex.transaction(async (trx) => {
+      // Znajdowanie odpowiadającego wpisu wypożyczenia
+      const rental = await trx('rentals').where('id', rental_id).first();
+      if (!rental) {
+        return res.status(404).json({ message: 'Rental not found.' });
+      }
 
-    // Set the board game as available
-    await knex('boardgames')
-      .where('id', rental.boardgame_id)
-      .update({ is_available: true });
+      // Ustawienie gry planszowej jako dostępnej
+      await trx('boardgames')
+        .where('id', rental.boardgame_id)
+        .update({ is_available: true });
 
-    // Update the rental entry with the end date
-    const updatedRental = await knex('rentals')
-      .where('id', rental_id)
-      .update({
-        rental_end_date: new Date(),
-      })
-      .returning('*');
+      // Aktualizacja wpisu wypożyczenia z datą zakończenia
+      const updatedRental = await trx('rentals')
+        .where('id', rental_id)
+        .update({
+          rental_end_date: new Date(),
+        })
+        .returning('*');
 
-    res.status(200).json(updatedRental[0]);
+      res.status(200).json(updatedRental[0]);
+    });
   } catch (error) {
     console.error(error);
     res
