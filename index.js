@@ -47,14 +47,15 @@ app.get('/boardgames/:id', getBoardGame);
 app.post(
   '/boardgames',
   authenticateAdmin,
-  validationBoardGame,
   upload.single('cover'),
+  validationBoardGame,
   createBoardGame,
 );
 app.put(
   '/boardgames/:id',
   authenticateAdmin,
   upload.single('cover'),
+  validationBoardGame,
   updateBoardGame,
 );
 app.delete('/boardgames/:id', authenticateAdmin, deleteBoardGame);
@@ -69,11 +70,7 @@ app.get(
   getRentalByBoardGameId,
 );
 app.post('/rentals/:id/review', authenticateToken, addBoardGameReview);
-app.get(
-  '/rentals/:gameId',
-  authenticateToken,
-  getRentalsByBoardGame,
-);
+app.get('/rentals/:gameId', authenticateToken, getRentalsByBoardGame);
 app.delete(
   '/rentals/:gameId/clearRatings',
   authenticateAdmin,
