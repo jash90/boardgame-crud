@@ -1,4 +1,4 @@
-const knex = require('knex')(require('../../knexfile').development);
+const knex = require('../../knex');
 
 const getRentalByBoardGameId = async (req, res) => {
   const { boardGameId } = req.params;

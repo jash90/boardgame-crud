@@ -1,4 +1,4 @@
-const knex = require('knex')(require('../../knexfile').development);
+const knex = require('../../knex');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const secretOrPublicKey = process.env.SECRET_OR_PUBLIC_KEY;

@@ -1,8 +1,3 @@
-// Update with your config settings.
-
-/**
- * @type { Object.<string, import("knex").Knex.Config> }
- */
 module.exports = {
   development: {
     client: 'sqlite3',
@@ -14,39 +9,17 @@ module.exports = {
     },
     useNullAsDefault: true,
   },
-
-  staging: {
-    client: 'postgresql',
+  production: {
+    client: 'pg',
     connection: {
-      database: 'mydatabase',
-      user: 'postgres',
-      password: 'postgres',
       host: 'localhost',
       port: 5432,
-    },
-    pool: {
-      min: 2,
-      max: 10,
-    },
-    migrations: {
-      tableName: 'knex_migrations',
-    },
-    useNullAsDefault: true,
-  },
-
-  production: {
-    client: 'postgresql',
-    connection: {
-      database: 'my_db',
-      user: 'username',
-      password: 'password',
-    },
-    pool: {
-      min: 2,
-      max: 10,
+      user: 'admin',
+      password: 'dbB2r#e4',
+      database: 'boardgames',
     },
     migrations: {
-      tableName: 'knex_migrations',
+      directory: './src/migrations', // replace this with your new migration path
     },
     useNullAsDefault: true,
   },
