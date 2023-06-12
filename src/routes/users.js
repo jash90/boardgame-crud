@@ -2,6 +2,28 @@ const knex = require('../../knex');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const secretOrPublicKey = process.env.SECRET_OR_PUBLIC_KEY;
+const Redis = require('ioredis');
+const redis = new Redis({ host: 'localhost', port: 6379 });
+
+function convertToSeconds(str) {
+  const timeUnits = {
+    s: 1,
+    m: 60,
+    h: 3600,
+    d: 86400,
+  };
+
+  // Check if the input matches the format we expect
+  const match = str.match(/^(\d+)(s|m|h|d)$/);
+  if (!match) {
+    throw new Error('Invalid duration format');
+  }
+
+  const amount = Number(match[1]);
+  const unit = match[2];
+
+  return amount * timeUnits[unit];
+}
 
 const register = async (req, res) => {
   try {
@@ -39,10 +61,25 @@ const login = async (req, res) => {
     return res.status(401).json({ error: 'Invalid username or password' });
   }
 
-  // Create JWT
-  const token = jwt.sign({ id: user.id }, secretOrPublicKey);
+  // Create JWT with 1 hour expiration
+  const token = jwt.sign({ id: user.id }, secretOrPublicKey, {
+    expiresIn: process.env.EXPIRES_TOKEN,
+  });
 
-  res.json({ token });
+  // Generate a refresh token with 1 day expiration
+  const refreshToken = jwt.sign({ id: user.id }, secretOrPublicKey, {
+    expiresIn: process.env.EXPIRES_REFRESH_TOKEN,
+  });
+
+  // Store the refresh token in redis with expiration
+  await redis.set(
+    user.id.toString(),
+    refreshToken,
+    'EX',
+    convertToSeconds(process.env.EXPIRES_REFRESH_TOKEN),
+  ); // 1 day in seconds
+
+  res.json({ token, refreshToken });
 };
 
 const authenticateToken = (req, res, next) => {
@@ -54,7 +91,7 @@ const authenticateToken = (req, res, next) => {
   }
 
   jwt.verify(token, secretOrPublicKey, (err, user) => {
-    if (err) return res.sendStatus(403);
+    if (err) return res.sendStatus(401);
     req.user = user;
     next();
   });
@@ -208,6 +245,46 @@ const changePassword = async (req, res) => {
   }
 };
 
+const refresh = async (req, res) => {
+  const authRefreshToken = req.headers['x-refresh-token'];
+  const refreshToken = authRefreshToken && authRefreshToken.split(' ')[1];
+
+  if (!refreshToken) {
+    return res.status(403).json({ message: 'Refresh token is required' });
+  }
+
+  jwt.verify(refreshToken, secretOrPublicKey, async (err, user) => {
+    if (err) {
+      if (err.name === 'TokenExpiredError') {
+        return res.status(403).json({ message: 'Refresh token expired' });
+      }
+      console.log(err);
+      return res.sendStatus(403);
+    }
+
+    const storedRefreshToken = await redis.get(user.id.toString());
+
+    if (!storedRefreshToken || storedRefreshToken !== refreshToken) {
+      return res.sendStatus(403);
+    }
+
+    const newToken = jwt.sign({ id: user.id }, secretOrPublicKey, {
+      expiresIn: process.env.EXPIRES_TOKEN,
+    });
+    const newRefreshToken = jwt.sign({ id: user.id }, secretOrPublicKey, {
+      expiresIn: process.env.EXPIRES_REFRESH_TOKEN,
+    });
+    await redis.set(
+      user.id.toString(),
+      newRefreshToken,
+      'EX',
+      convertToSeconds(process.env.EXPIRES_REFRESH_TOKEN),
+    ); // 1 day in seconds
+
+    res.json({ token: newToken, refreshToken: newRefreshToken });
+  });
+};
+
 module.exports = {
   login,
   register,
@@ -218,4 +295,5 @@ module.exports = {
   updateUserRole,
   authenticateAdmin,
   changePassword,
+  refresh,
 };
