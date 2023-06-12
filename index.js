@@ -41,6 +41,10 @@ const { validateRegistration } = require('./src/validation/registerUser');
 const app = express();
 app.use(bodyParser.json());
 app.use(cors());
+app.use((req, res, next) => {
+  console.log(`[${req.method}] ${req.url} ${res.statusCode}`);
+  next();
+});
 
 app.get('/boardgames', getBoardGames);
 app.get('/boardgames/:id', getBoardGame);
