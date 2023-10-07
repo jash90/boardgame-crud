@@ -105,7 +105,7 @@ const authenticateAdmin = async (req, res, next) => {
     return res.status(401).json({ message: 'No token provided' });
   }
 
-  const { id } = jwt.verify(token, secretOrPublicKey);
+  const { id } = await jwt.verify(token, secretOrPublicKey);
 
   const user = await knex('users').where({ id }).first();
 
@@ -130,7 +130,7 @@ const getUser = async (req, res) => {
     }
 
     // verify token and get user id
-    const { id } = jwt.verify(token, secretOrPublicKey);
+    const { id } = await jwt.verify(token, secretOrPublicKey);
 
     // fetch user from database
     const user = await knex('users').where({ id }).first();
@@ -158,7 +158,7 @@ const setAdmin = async (req, res) => {
 
   try {
     const token = req.headers.authorization.split(' ')[1]; // Bearer <token>
-    const decodedToken = jwt.verify(token, secretOrPublicKey);
+    const decodedToken = await jwt.verify(token, secretOrPublicKey);
     const user = await knex('users').where({ id: decodedToken.id }).first();
 
     if (user.role !== 'admin') {
@@ -215,7 +215,7 @@ const changePassword = async (req, res) => {
     }
 
     // verify token and get user id
-    const { id } = jwt.verify(token, secretOrPublicKey);
+    const { id } = await jwt.verify(token, secretOrPublicKey);
 
     // fetch user from database
     const user = await knex('users').where({ id }).first();
@@ -258,7 +258,6 @@ const refresh = async (req, res) => {
       if (err.name === 'TokenExpiredError') {
         return res.status(403).json({ message: 'Refresh token expired' });
       }
-      console.log(err);
       return res.sendStatus(403);
     }
 
