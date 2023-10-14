@@ -12,7 +12,7 @@ module.exports = {
   production: {
     client: 'pg',
     connection: {
-      host: 'localhost',
+      host: process.env.HOST,
       port: 5432,
       user: 'admin',
       password: 'dbB2r#e4',
