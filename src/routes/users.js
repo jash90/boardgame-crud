@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const secretOrPublicKey = process.env.SECRET_OR_PUBLIC_KEY;
 const Redis = require('ioredis');
-const redis = new Redis({ host: 'localhost', port: 6379 });
+const redis = new Redis(process.env.REDIS_URL);
 
 function convertToSeconds(str) {
   const timeUnits = {

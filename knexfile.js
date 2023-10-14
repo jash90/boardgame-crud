@@ -10,14 +10,8 @@ module.exports = {
     useNullAsDefault: true,
   },
   production: {
-    client: 'pg',
-    connection: {
-      host: process.env.HOST,
-      port: 5432,
-      user: 'admin',
-      password: 'dbB2r#e4',
-      database: 'boardgames',
-    },
+    client: 'pg', 
+    connection: process.env.DATABASE_URL,
     migrations: {
       directory: './src/migrations', // replace this with your new migration path
     },
