@@ -4,7 +4,7 @@ const createBoardGame = async (req, res) => {
   try {
     const { name, description, category, min_players, max_players, barcode } =
       req.body;
-    const cover = req.file.path;
+    let cover = req.file ? req.file.path : null;
     const newBoardGame = {
       name,
       description,
@@ -129,7 +129,7 @@ const updateBoardGame = async (req, res) => {
   try {
     const { name, description, category, min_players, max_players, barcode } =
       req.body;
-    const cover = req.file.path; // cover path
+    let cover = req.file ? req.file.path : null;
     const updatedBoardGame = {
       name,
       description,
