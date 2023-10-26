@@ -129,7 +129,7 @@ const updateBoardGame = async (req, res) => {
   try {
     const { name, description, category, min_players, max_players, barcode } =
       req.body;
-    let cover = req.file ? req.file.path : null;
+    let cover = req.file ? `uploads/${req.file.filename}` : null;
     const updatedBoardGame = {
       name,
       description,
