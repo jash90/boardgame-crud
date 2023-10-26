@@ -92,6 +92,7 @@ app.post('/change-password', authenticateToken, changePassword);
 app.post('/refresh', refresh);
 
 app.use('/uploads', express.static('uploads'));
+app.use('/assets', express.static('assets'));
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 
