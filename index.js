@@ -39,6 +39,8 @@ const {
 } = require('./src/routes/users');
 const { validateRegistration } = require('./src/validation/registerUser');
 
+const PREFIX = '/api'
+
 const app = express();
 app.use(bodyParser.json());
 app.use(cors());
@@ -47,54 +49,54 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get('/boardgames', getBoardGames);
-app.get('/boardgames/:id', getBoardGame);
+app.get(PREFIX + '/boardgames', getBoardGames);
+app.get(PREFIX + '/boardgames/:id', getBoardGame);
 app.post(
-  '/boardgames',
+    PREFIX + '/boardgames',
   authenticateAdmin,
   upload.single('cover'),
   validationBoardGame,
   createBoardGame,
 );
 app.put(
-  '/boardgames/:id',
+    PREFIX + '/boardgames/:id',
   authenticateAdmin,
   upload.single('cover'),
   validationBoardGame,
   updateBoardGame,
 );
-app.delete('/boardgames/:id', authenticateAdmin, deleteBoardGame);
+app.delete(PREFIX + '/boardgames/:id', authenticateAdmin, deleteBoardGame);
 
-app.post('/boardgames/borrow', authenticateToken, borrowBoardGame);
-app.post('/boardgames/return', authenticateToken, returnBoardGame);
-app.post('/boardgames/bulk-import', authenticateAdmin, importBoardGames);
+app.post(PREFIX + '/boardgames/borrow', authenticateToken, borrowBoardGame);
+app.post(PREFIX + '/boardgames/return', authenticateToken, returnBoardGame);
+app.post(PREFIX + '/boardgames/bulk-import', authenticateAdmin, importBoardGames);
 
 app.get(
-  '/rentalByBoardgameId/:boardGameId',
+    PREFIX + '/rentalByBoardgameId/:boardGameId',
   authenticateToken,
   getRentalByBoardGameId,
 );
-app.post('/rentals/:id/review', authenticateToken, addBoardGameReview);
-app.get('/rentals/:gameId', authenticateToken, getRentalsByBoardGame);
+app.post(PREFIX + '/rentals/:id/review', authenticateToken, addBoardGameReview);
+app.get(PREFIX + '/rentals/:gameId', authenticateToken, getRentalsByBoardGame);
 app.delete(
-  '/rentals/:gameId/clearRatings',
+    PREFIX + '/rentals/:gameId/clearRatings',
   authenticateAdmin,
   clearRatingsByBoardGame,
 );
 
-app.post('/register', validateRegistration, register);
-app.post('/login', login);
-app.get('/user', authenticateToken, getUser);
-app.post('/set-admin', authenticateAdmin, setAdmin);
-app.get('/users', authenticateAdmin, getUsers);
-app.patch('/users/:id', authenticateAdmin, updateUserRole);
-app.post('/change-password', authenticateToken, changePassword);
-app.post('/refresh', refresh);
+app.post(PREFIX + '/register', validateRegistration, register);
+app.post(PREFIX + '/login', login);
+app.get(PREFIX + '/user', authenticateToken, getUser);
+app.post(PREFIX + '/set-admin', authenticateAdmin, setAdmin);
+app.get(PREFIX + '/users', authenticateAdmin, getUsers);
+app.patch(PREFIX + '/users/:id', authenticateAdmin, updateUserRole);
+app.post(PREFIX + '/change-password', authenticateToken, changePassword);
+app.post(PREFIX + '/refresh', refresh);
 
-app.use('/uploads', express.static('uploads'));
-app.use('/assets', express.static('assets'));
+app.use(PREFIX + '/uploads', express.static('uploads'));
+app.use(PREFIX + '/assets', express.static('assets'));
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
+app.use(PREFIX + '/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 
 // Start the server
 const PORT = process.env.PORT || 3000;
