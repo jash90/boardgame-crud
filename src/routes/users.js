@@ -82,15 +82,15 @@ const login = async (req, res) => {
   res.json({ token, refreshToken });
 };
 
-const authenticateToken = (req, res, next) => {
+const authenticateToken = async (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
-    return res.status(401).json({ message: 'No token provided' });
+    return res.status(401).json({message: 'No token provided'});
   }
 
-  jwt.verify(token, secretOrPublicKey, (err, user) => {
+  await jwt.verify(token, secretOrPublicKey, (err, user) => {
     if (err) return res.sendStatus(401);
     req.user = user;
     next();
@@ -105,7 +105,10 @@ const authenticateAdmin = async (req, res, next) => {
     return res.status(401).json({ message: 'No token provided' });
   }
 
-  const { id } = await jwt.verify(token, secretOrPublicKey);
+  const { id } = await jwt.verify(token, secretOrPublicKey, (err, user) => {
+    if (err) return res.sendStatus(401);
+    req.user = user;
+  });
 
   const user = await knex('users').where({ id }).first();
 
@@ -130,7 +133,10 @@ const getUser = async (req, res) => {
     }
 
     // verify token and get user id
-    const { id } = await jwt.verify(token, secretOrPublicKey);
+    const { id } = await jwt.verify(token, secretOrPublicKey, (err, user) => {
+      if (err) return res.sendStatus(401);
+      req.user = user;
+    });
 
     // fetch user from database
     const user = await knex('users').where({ id }).first();
@@ -158,7 +164,10 @@ const setAdmin = async (req, res) => {
 
   try {
     const token = req.headers.authorization.split(' ')[1]; // Bearer <token>
-    const decodedToken = await jwt.verify(token, secretOrPublicKey);
+    const decodedToken = await jwt.verify(token, secretOrPublicKey, (err, user) => {
+      if (err) return res.sendStatus(401);
+      req.user = user;
+    });
     const user = await knex('users').where({ id: decodedToken.id }).first();
 
     if (user.role !== 'admin') {
@@ -215,7 +224,10 @@ const changePassword = async (req, res) => {
     }
 
     // verify token and get user id
-    const { id } = await jwt.verify(token, secretOrPublicKey);
+    const { id } = await jwt.verify(token, secretOrPublicKey, (err, user) => {
+      if (err) return res.sendStatus(401);
+      req.user = user;
+    });
 
     // fetch user from database
     const user = await knex('users').where({ id }).first();
@@ -253,7 +265,7 @@ const refresh = async (req, res) => {
     return res.status(403).json({ message: 'Refresh token is required' });
   }
 
-  jwt.verify(refreshToken, secretOrPublicKey, async (err, user) => {
+  await jwt.verify(refreshToken, secretOrPublicKey, async (err, user) => {
     if (err) {
       if (err.name === 'TokenExpiredError') {
         return res.status(403).json({ message: 'Refresh token expired' });
