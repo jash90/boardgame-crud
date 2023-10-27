@@ -61,21 +61,21 @@ const login = async (req, res) => {
   }
 
   // Create JWT with 1 hour expiration
-  const token = jwt.sign({ id: user.id }, secretOrPublicKey, {
+  const token = await jwt.sign({ id: user.id }, secretOrPublicKey, {
     expiresIn: process.env.EXPIRES_TOKEN,
   });
 
   // Generate a refresh token with 1 day expiration
-  const refreshToken = jwt.sign({ id: user.id }, secretOrPublicKey, {
+  const refreshToken = await jwt.sign({ id: user.id }, secretOrPublicKey, {
     expiresIn: process.env.EXPIRES_REFRESH_TOKEN,
   });
 
   // Store the refresh token in redis with expiration
   await redis.set(
-    user.id.toString(),
-    refreshToken,
-    'EX',
-    convertToSeconds(process.env.EXPIRES_REFRESH_TOKEN),
+      user.id.toString(),
+      refreshToken,
+      'EX',
+      convertToSeconds(process.env.EXPIRES_REFRESH_TOKEN),
   ); // 1 day in seconds
 
   res.json({ token, refreshToken });
@@ -97,28 +97,35 @@ const authenticateToken = async (req, res, next) => {
 };
 
 const authenticateAdmin = async (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+  try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
 
-  if (!token) {
-    return res.status(401).json({ message: 'No token provided' });
+    if (!token) {
+      return res.status(401).json({message: 'No token provided'});
+    }
+
+    const JWT = await jwt.verify(token, secretOrPublicKey);
+
+    if (!JWT?.id) {
+      return res.status(401).json({message: 'Unauthorized access'});
+    }
+
+    const {id} = JWT;
+
+    const user = await knex('users').where({id}).first();
+
+    if (!user) {
+      return res.status(404).json({message: 'User not found'});
+    }
+
+    if (user?.role !== 'admin') {
+      return res.status(401).json({message: 'Unauthorized access'});
+    }
+    next();
+  } catch (e) {
+    return res.status(401).json(e)
   }
-
-  const { id } = await jwt.verify(token, secretOrPublicKey, (err, user) => {
-    if (err) return res.sendStatus(401);
-    req.user = user;
-  });
-
-  const user = await knex('users').where({ id }).first();
-
-  if (!user) {
-    return res.status(404).json({ message: 'User not found' });
-  }
-
-  if (user?.role !== 'admin') {
-    return res.status(401).json({ message: 'Unauthorized access' });
-  }
-  next();
 };
 
 const getUser = async (req, res) => {
@@ -132,10 +139,13 @@ const getUser = async (req, res) => {
     }
 
     // verify token and get user id
-    const { id } = await jwt.verify(token, secretOrPublicKey, (err, user) => {
-      if (err) return res.sendStatus(401);
-      req.user = user;
-    });
+    const JWT = await jwt.verify(token, secretOrPublicKey);
+
+    if (!JWT?.id) {
+      return res.status(401).json({ message: 'Unauthorized access' });
+    }
+
+    const {id} = JWT;
 
     // fetch user from database
     const user = await knex('users').where({ id }).first();
@@ -162,16 +172,20 @@ const setAdmin = async (req, res) => {
 
   try {
     const token = req.headers.authorization.split(' ')[1]; // Bearer <token>
-    const decodedToken = await jwt.verify(token, secretOrPublicKey, (err, user) => {
-      if (err) return res.sendStatus(401);
-      req.user = user;
-    });
-    const user = await knex('users').where({ id: decodedToken.id }).first();
+    const JWT = await jwt.verify(token, secretOrPublicKey);
+
+    if (!JWT?.id) {
+      return res.status(401).json({ message: 'Unauthorized access' });
+    }
+
+    const {id} = JWT;
+
+    const user = await knex('users').where({ id }).first();
 
     if (user.role !== 'admin') {
       return res
-        .status(403)
-        .json({ message: 'Only admin can set a user as admin' });
+          .status(401)
+          .json({ message: 'Only admin can set a user as admin' });
     }
 
     await knex('users').where({ id: userId }).update({ role: 'admin' });
@@ -186,11 +200,11 @@ const setAdmin = async (req, res) => {
 const getUsers = async (req, res) => {
   try {
     const users = await knex('users').select(
-      'id',
-      'email',
-      'firstName',
-      'lastName',
-      'role',
+        'id',
+        'email',
+        'firstName',
+        'lastName',
+        'role',
     );
     res.json({ users });
   } catch (error) {
@@ -222,10 +236,13 @@ const changePassword = async (req, res) => {
     }
 
     // verify token and get user id
-    const { id } = await jwt.verify(token, secretOrPublicKey, (err, user) => {
-      if (err) return res.sendStatus(401);
-      req.user = user;
-    });
+    const JWT = await jwt.verify(token, secretOrPublicKey);
+
+    if (!JWT?.id) {
+      return res.status(401).json({ message: 'Unauthorized access' });
+    }
+
+    const {id} = JWT;
 
     // fetch user from database
     const user = await knex('users').where({ id }).first();
@@ -249,49 +266,60 @@ const changePassword = async (req, res) => {
     });
 
     res.status(200).json({ message: 'Password changed successfully' });
-  } catch (e) {
-    console.log(e);
-    res.status(500).json({ message: 'Error in changing password' });
+  } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return res.status(403).json({ message: 'Refresh token expired' });
+    } else {
+      res.status(500).json({message: 'Error in changing password'});
+    }
   }
 };
 
 const refresh = async (req, res) => {
-  const authRefreshToken = req.headers['x-refresh-token'];
-  const refreshToken = authRefreshToken && authRefreshToken.split(' ')[1];
+  try {
+    const authRefreshToken = req.headers['x-refresh-token'];
+    const refreshToken = authRefreshToken && authRefreshToken.split(' ')[1];
 
-  if (!refreshToken) {
-    return res.status(403).json({ message: 'Refresh token is required' });
-  }
-
-  await jwt.verify(refreshToken, secretOrPublicKey, async (err, user) => {
-    if (err) {
-      if (err.name === 'TokenExpiredError') {
-        return res.status(403).json({ message: 'Refresh token expired' });
-      }
-      return res.sendStatus(403);
+    if (!refreshToken) {
+      return res.status(403).json({message: 'Refresh token is required'});
     }
 
-    const storedRefreshToken = await redis.get(user.id.toString());
+    const JWT = await jwt.verify(refreshToken, secretOrPublicKey);
+
+    if (!JWT?.id) {
+      return res.status(403).json({message: 'Unauthorized access'})
+    }
+
+    const {id} = JWT;
+
+    const storedRefreshToken = await redis.get(id.toString());
 
     if (!storedRefreshToken || storedRefreshToken !== refreshToken) {
       return res.sendStatus(403);
     }
 
-    const newToken = jwt.sign({ id: user.id }, secretOrPublicKey, {
+    const newToken = await jwt.sign({id}, secretOrPublicKey, {
       expiresIn: process.env.EXPIRES_TOKEN,
     });
-    const newRefreshToken = jwt.sign({ id: user.id }, secretOrPublicKey, {
+    const newRefreshToken = await jwt.sign({id}, secretOrPublicKey, {
       expiresIn: process.env.EXPIRES_REFRESH_TOKEN,
     });
+
     await redis.set(
-      user.id.toString(),
-      newRefreshToken,
-      'EX',
-      convertToSeconds(process.env.EXPIRES_REFRESH_TOKEN),
+        id.toString(),
+        newRefreshToken,
+        'EX',
+        convertToSeconds(process.env.EXPIRES_REFRESH_TOKEN),
     ); // 1 day in seconds
 
-    res.json({ token: newToken, refreshToken: newRefreshToken });
-  });
+    res.json({token: newToken, refreshToken: newRefreshToken});
+  } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return res.status(403).json({ message: 'Refresh token expired' });
+    } else {
+      return res.sendStatus(403);
+    }
+  }
 };
 
 module.exports = {
