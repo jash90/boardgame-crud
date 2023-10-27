@@ -39,7 +39,6 @@ const register = async (req, res) => {
 
     res.status(201).json({ message: 'User created successfully', user });
   } catch (e) {
-    console.log(e);
     res.status(500).json({ message: 'Error in creating user' });
   }
 };
@@ -87,7 +86,7 @@ const authenticateToken = async (req, res, next) => {
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
-    return res.status(401).json({message: 'No token provided'});
+    return res.status(401).json({ message: 'No token provided' });
   }
 
   await jwt.verify(token, secretOrPublicKey, (err, user) => {
@@ -150,7 +149,6 @@ const getUser = async (req, res) => {
 
     res.json(user);
   } catch (error) {
-    console.log(error);
     if (error == 'JsonWebTokenError: invalid signature') {
       res.status(498).json({ message: 'invalid signature' });
     } else {
