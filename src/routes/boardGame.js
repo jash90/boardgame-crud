@@ -17,7 +17,6 @@ const createBoardGame = async (req, res) => {
     await knex('boardgames').insert(newBoardGame);
     res.status(201).send('Board game created');
   } catch (error) {
-    console.log(error);
     res.status(500).send('Error creating board game');
   }
 };
@@ -96,7 +95,6 @@ const getBoardGames = async (req, res) => {
 
     res.status(200).json(boardgames);
   } catch (error) {
-    console.log(error);
     res.status(500).send('Error fetching boardgames');
   }
 };
@@ -177,7 +175,6 @@ const borrowBoardGame = async (req, res) => {
 
     res.sendStatus(201);
   } catch (error) {
-    console.log(error);
     res.status(500).send('Error borrowing board game');
   }
 };
@@ -227,7 +224,6 @@ const importBoardGames = async (req, res) => {
 
     res.status(200).send('Board games imported successfully');
   } catch (error) {
-    console.log(error);
     res.status(500).send('Error importing board games');
   }
 };
