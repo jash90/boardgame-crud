@@ -31,7 +31,6 @@ const addBoardGameReview = async (req, res) => {
 
     res.status(200).send('Review added successfully');
   } catch (error) {
-    console.log(error);
     res.status(500).send('Error adding review');
   }
 };
@@ -69,7 +68,6 @@ const clearRatingsByBoardGame = async (req, res) => {
     await knex('rentals').where('boardgame_id', gameId).delete();
     res.status(200).send('Ratings cleared successfully');
   } catch (error) {
-    console.log(error);
     res.status(500).send('Error clearing ratings');
   }
 };
