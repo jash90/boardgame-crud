@@ -134,9 +134,11 @@ const updateBoardGame = async (req, res) => {
       category,
       min_players,
       max_players,
-      cover,
       barcode,
     };
+    if (!!cover) {
+      updatedBoardGame["cover"] = cover;
+    }
     await knex('boardgames')
       .where('id', req.params.id)
       .update(updatedBoardGame);
