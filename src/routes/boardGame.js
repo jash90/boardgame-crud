@@ -218,9 +218,7 @@ const returnBoardGame = async (req, res) => {
 
 const importBoardGames = async (req, res) => {
   try {
-    const boardgames = req.body.boardgames
-
-    await knex('boardgames').insert(boardgames)
+    await knex('boardgames').insert(req.body.boardgames)
 
     res.status(200).send('Board games imported successfully')
   } catch (error) {
