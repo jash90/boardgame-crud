@@ -1,5 +1,5 @@
 // validation/boardgame.js
-const Joi = require('joi');
+const Joi = require('joi')
 
 const boardgameSchema = Joi.object({
   name: Joi.string().min(3).max(100).required(),
@@ -9,16 +9,16 @@ const boardgameSchema = Joi.object({
   max_players: Joi.number().integer().min(1).required(),
   is_available: Joi.boolean().default(true),
   barcode: Joi.any().optional(),
-  cover: Joi.optional(),
-});
+  cover: Joi.optional()
+})
 
 const validationBoardGame = (req, res, next) => {
-  const { error } = boardgameSchema.validate(req.body);
+  const { error } = boardgameSchema.validate(req.body)
   if (error) {
-    res.status(400).send(error.details[0].message);
+    res.status(400).send(error.details[0].message)
   } else {
-    next();
+    next()
   }
-};
+}
 
-module.exports = { validationBoardGame };
+module.exports = { validationBoardGame }
