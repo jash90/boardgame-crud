@@ -5,8 +5,8 @@ const boardgameSchema = Joi.object({
   name: Joi.string().min(3).max(100).required(),
   description: Joi.string().optional(),
   category: Joi.string().optional().allow(''),
-  min_players: Joi.number().integer().min(1).required(),
-  max_players: Joi.number().integer().min(1).required(),
+  minPlayers: Joi.number().integer().min(1).required(),
+  maxPlayers: Joi.number().integer().min(1).required(),
   is_available: Joi.boolean().default(true),
   barcode: Joi.any().optional(),
   cover: Joi.optional()
