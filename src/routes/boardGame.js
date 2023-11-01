@@ -4,13 +4,14 @@ const createBoardGame = async (req, res) => {
   try {
     const { name, description, category, minPlayers, maxPlayers, barcode } =
       req.body
-    const cover = req.file ? req.file.path : null
+    const cover = req.file ? `uploads/${req.file.filename}` : null
+
     await knex('boardgames').insert({
       name,
       description,
       category,
-      minPlayers,
-      maxPlayers,
+      min_players: minPlayers,
+      max_players: maxPlayers,
       barcode,
       cover
     })
