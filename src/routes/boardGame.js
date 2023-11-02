@@ -157,14 +157,14 @@ const deleteBoardGame = async (req, res) => {
 }
 
 const borrowBoardGame = async (req, res) => {
-  const { boardgameId, firstName, lastName, documentNumber } = req.body
+  const { boardgameId, firstname, lastname, documentNumber } = req.body
 
   try {
     await knex.transaction(async (trx) => {
       await trx('rentals').insert({
         boardgame_id: boardgameId,
-        first_name: firstName,
-        last_name: lastName,
+        first_name: firstname,
+        last_name: lastname,
         document_number: documentNumber,
         rental_start_date: new Date()
       })
