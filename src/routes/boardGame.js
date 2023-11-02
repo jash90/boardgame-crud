@@ -28,13 +28,13 @@ const getBoardGames = async (req, res) => {
     const sortBy = req.query.sortBy || 'name'
     const order = req.query.order || 'asc'
     const search = req.query.search || null
-    const minPlayers = req.query.minPlayers
+    const minPlayers = parseInt(req.query.minPlayers) > 0
       ? parseInt(req.query.minPlayers)
       : null
-    const maxPlayers = req.query.maxPlayers
+    const maxPlayers = parseInt(req.query.maxPlayers) > 0
       ? parseInt(req.query.maxPlayers)
       : null
-    const avgRating = req.query.avgRating
+    const avgRating = parseFloat(req.query.avgRating) > 0
       ? parseFloat(req.query.avgRating)
       : null
 
